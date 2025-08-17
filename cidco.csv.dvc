@@ -1,0 +1,5 @@
+outs:
+- md5: d9bcf7817b3e5d057cbbd7737739a27b
+  size: 150817
+  hash: md5
+  path: cidco.csv
