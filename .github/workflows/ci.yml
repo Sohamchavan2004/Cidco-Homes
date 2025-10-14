@@ -49,16 +49,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest httpx ruff==0.6.7
       - name: Install DVC (if present)
-        if: ${{ hashFiles('.dvc/config') != '' }}
-        run: pip install "dvc[gdrive]==3.55.2"
+        run: echo "Skipping DVC installation"
       - name: Configure DVC Service Account
-        if: ${{ hashFiles('.dvc/config') != '' && env.GDRIVE_SA_JSON != '' }}
-        run: |
-          echo "$GDRIVE_SA_JSON" > sa.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$PWD/sa.json" >> $GITHUB_ENV
+        run: echo "Skipping DVC service account configuration"
       - name: Pull DVC artifacts
-        if: ${{ hashFiles('.dvc/config') != '' }}
-        run: dvc pull -v || true
+        run: echo "Skipping DVC pull"
       - name: Run tests
         run: pytest -q
 
