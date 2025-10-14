@@ -3,8 +3,8 @@ from pydantic import BaseModel
 import pandas as pd
 import joblib
 import os
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+# from sklearn.compose import ColumnTransformer
+# from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 # Initialize FastAPI app
 app = FastAPI(title="Property Price Prediction API")
@@ -74,3 +74,4 @@ def predict_price(request: PropertyRequest):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Prediction failed: {e}")
+
