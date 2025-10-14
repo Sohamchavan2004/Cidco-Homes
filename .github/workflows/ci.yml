@@ -55,7 +55,7 @@ jobs:
       - name: Pull DVC artifacts
         run: echo "Skipping DVC pull"
       - name: Run tests
-        run: pytest -q
+        run: pytest tests/ -q
 
   docker-build:
     needs: test
