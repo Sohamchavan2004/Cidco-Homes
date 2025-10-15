@@ -44,17 +44,27 @@ except Exception:
 st.set_page_config(page_title="CIDCO Homes: Price Prediction & Responsible AI", layout="wide")
 st.title("🏘️ CIDCO Housing Price Prediction Dashboard")
 
-st.markdown(
-    """
-    This dashboard analyzes CIDCO housing data to predict property prices (Price_lakhs) using various ML models.
-    It includes:
-    - **EDA insights** from your dataset
-    - **Model training** (Ridge, Random Forest, XGBoost)
-    - **SHAP explanations** for feature importance
-    - **LIME** for local interpretability
-    - **Fairness audit** across sensitive attributes (Location, Category)
-    """
-)
+# Problem Statement Section
+st.markdown("""
+### 📋 Problem Statement
+
+The City and Industrial Development Corporation (CIDCO) requires an intelligent system to predict housing prices 
+across various properties in the Navi Mumbai region. The objective is to develop a machine learning solution that:
+
+- **Predicts accurate property prices** based on features like location, carpet area, distance from railway stations, 
+  and property categorization
+- **Provides transparency** through interpretable AI techniques (SHAP and LIME) to explain price predictions
+- **Ensures fairness** across different applicant categories (General, SC, ST, Religious Minorities, etc.) and locations
+- **Assists decision-makers** in pricing strategies and policy formulation for affordable housing schemes
+
+This dashboard analyzes CIDCO housing data using state-of-the-art machine learning models with a focus on:
+- **Predictive Accuracy**: Multiple regression models (Ridge, Random Forest, XGBoost) for robust predictions
+- **Explainability**: SHAP values for global feature importance and LIME for local instance-level explanations
+- **Responsible AI**: Fairness audits to detect and mitigate bias across sensitive demographic attributes
+- **Deployment Ready**: API code generation for production integration
+""")
+
+st.markdown("---")
 
 # -----------------------
 # Utilities & Example data
@@ -140,7 +150,7 @@ else:
             st.error(f"Could not read file: {e}")
             st.stop()
     else:
-        st.info("📤 No file uploaded – using example dataset.")
+        st.info("📤 No file uploaded — using example dataset.")
         df = load_example_data()
 
 st.sidebar.write(f"**Dataset:** {df.shape[0]} rows × {df.shape[1]} columns")
@@ -150,59 +160,108 @@ st.sidebar.write(f"**Dataset:** {df.shape[0]} rows × {df.shape[1]} columns")
 # -----------------------
 st.header("📊 Exploratory Data Analysis")
 
+st.markdown("""
+Understanding the data distribution and relationships is crucial for building accurate predictive models. 
+The following visualizations provide insights into property prices, geographical factors, and feature correlations 
+within the CIDCO housing dataset.
+""")
+
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Dataset Preview")
+    st.markdown("*First 10 rows of the CIDCO housing dataset showing key features*")
     st.dataframe(df.head(10))
 
 with col2:
     st.subheader("Summary Statistics")
+    st.markdown("*Statistical measures (mean, median, standard deviation) for numerical features*")
     st.dataframe(df.describe().T)
 
 # Distribution plots
 st.subheader("🔍 Feature Distributions")
+st.markdown("*Visual analysis of key features affecting property prices in CIDCO projects*")
+
 tab1, tab2, tab3 = st.tabs(["Price Distribution", "Distance Analysis", "Location Popularity"])
 
 with tab1:
     fig, ax = plt.subplots(figsize=(10, 5))
     if 'Price_lakhs' in df.columns:
-        sns.histplot(df['Price_lakhs'], bins=30, kde=True, ax=ax)
-        ax.set_title("Distribution of Property Prices")
-        ax.set_xlabel("Price (Lakhs)")
+        sns.histplot(df['Price_lakhs'], bins=30, kde=True, ax=ax, color='steelblue')
+        ax.set_title("Distribution of Property Prices in CIDCO Housing Projects", fontsize=14, fontweight='bold')
+        ax.set_xlabel("Price (Lakhs INR)", fontsize=12)
+        ax.set_ylabel("Frequency (Number of Properties)", fontsize=12)
+        ax.grid(axis='y', alpha=0.3)
+        
+        # Add descriptive text
+        mean_price = df['Price_lakhs'].mean()
+        median_price = df['Price_lakhs'].median()
+        ax.text(0.98, 0.98, f'Mean: ₹{mean_price:.2f}L\nMedian: ₹{median_price:.2f}L', 
+                transform=ax.transAxes, verticalalignment='top', horizontalalignment='right',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5), fontsize=10)
+        
         st.pyplot(fig)
+        st.caption("📊 This histogram shows the frequency distribution of property prices. The curve (KDE) represents the probability density, helping identify the most common price ranges.")
 
 with tab2:
     fig, ax = plt.subplots(figsize=(10, 5))
     if 'Distance_from_Railway_Station_km' in df.columns and 'Price_lakhs' in df.columns:
-        ax.scatter(df['Distance_from_Railway_Station_km'], df['Price_lakhs'], alpha=0.5)
-        ax.set_xlabel("Distance from Railway Station (km)")
-        ax.set_ylabel("Price (Lakhs)")
-        ax.set_title("Price vs Distance from Railway Station")
+        scatter = ax.scatter(df['Distance_from_Railway_Station_km'], df['Price_lakhs'], 
+                           alpha=0.6, c=df['Price_lakhs'], cmap='viridis', s=50)
+        ax.set_xlabel("Distance from Railway Station (kilometers)", fontsize=12)
+        ax.set_ylabel("Price (Lakhs INR)", fontsize=12)
+        ax.set_title("Impact of Railway Station Proximity on Property Prices", fontsize=14, fontweight='bold')
+        ax.grid(True, alpha=0.3)
+        
+        # Add colorbar
+        cbar = plt.colorbar(scatter, ax=ax)
+        cbar.set_label('Price (Lakhs)', rotation=270, labelpad=20)
+        
         st.pyplot(fig)
+        st.caption("🚉 This scatter plot reveals the relationship between distance from railway stations and property prices. Proximity to transport hubs typically correlates with higher property values due to better connectivity.")
 
 with tab3:
     if 'location_popularity' in df.columns:
         fig, ax = plt.subplots(figsize=(10, 5))
-        df['location_popularity'].value_counts().plot(kind='bar', ax=ax)
-        ax.set_title("Location Popularity Distribution")
-        ax.set_xlabel("Popularity Score")
-        ax.set_ylabel("Count")
+        popularity_counts = df['location_popularity'].value_counts().sort_index()
+        bars = popularity_counts.plot(kind='bar', ax=ax, color='coral', edgecolor='black')
+        ax.set_title("Distribution of Location Popularity Scores Across CIDCO Projects", fontsize=14, fontweight='bold')
+        ax.set_xlabel("Popularity Score", fontsize=12)
+        ax.set_ylabel("Number of Properties", fontsize=12)
+        ax.grid(axis='y', alpha=0.3)
+        plt.xticks(rotation=45)
+        
+        # Add value labels on bars
+        for container in ax.containers:
+            ax.bar_label(container, fontsize=9)
+        
         st.pyplot(fig)
+        st.caption("📍 Location popularity score indicates demand and desirability. Higher scores typically reflect areas with better amenities, infrastructure, and social factors.")
 
 # Correlation heatmap
 if st.checkbox("Show Correlation Heatmap"):
     st.subheader("🔥 Correlation Matrix")
+    st.markdown("*Correlation coefficients between numerical features - values closer to +1 or -1 indicate stronger relationships*")
+    
     numeric_cols = df.select_dtypes(include=[np.number]).columns
     if len(numeric_cols) > 1:
         fig, ax = plt.subplots(figsize=(12, 8))
-        sns.heatmap(df[numeric_cols].corr(), annot=True, fmt='.2f', cmap='coolwarm', ax=ax)
+        correlation_matrix = df[numeric_cols].corr()
+        sns.heatmap(correlation_matrix, annot=True, fmt='.2f', cmap='coolwarm', 
+                   center=0, ax=ax, square=True, linewidths=1)
+        ax.set_title("Feature Correlation Heatmap - CIDCO Housing Dataset", fontsize=14, fontweight='bold', pad=20)
         st.pyplot(fig)
+        st.caption("🔢 Positive correlations (red) suggest features move together, while negative correlations (blue) indicate inverse relationships. This helps identify multicollinearity and feature importance.")
 
 # -----------------------
 # Feature Engineering
 # -----------------------
 st.header("⚙️ Feature Configuration")
+
+st.markdown("""
+The model uses both **numerical** and **categorical** features. Numerical features are standardized, 
+while categorical features are encoded to numerical representations for machine learning algorithms.
+""")
 
 # Define features based on CIDCO dataset
 available_numeric = ['Distance_from_Railway_Station_km', 'Carpet_Area_sqft', 
@@ -223,12 +282,12 @@ if target_col not in df.columns:
     st.stop()
 
 # -----------------------
-# Model Training Section
+# Model Testing Section
 # -----------------------
-st.sidebar.header("2️⃣ Model Training")
-train_size = st.sidebar.slider('Training set size (%)', 50, 90, 80) / 100
+st.sidebar.header("2️⃣ Model Testing")
+train_size = st.sidebar.slider('Test set size (%)', 50, 90, 80) / 100
 random_state = st.sidebar.number_input('Random seed', value=42, step=1)
-run_train = st.sidebar.button('🚀 Train Models', type="primary")
+run_train = st.sidebar.button('🚀 Test Model', type="primary")
 
 # Prepare data
 X = df[numeric_features + categorical_features].copy()
@@ -251,15 +310,21 @@ models = None
 results_df = None
 
 if run_train:
-    st.header("🤖 Model Training Results")
+    st.header("🤖 Model Test Results")
     
-    with st.spinner('Training models... Please wait'):
+    st.markdown("""
+    Three regression models are trained and compared: **Ridge Regression** (linear with regularization), 
+    **Random Forest** (ensemble of decision trees), and **XGBoost** (gradient boosting). 
+    Performance is evaluated using MAE (Mean Absolute Error), RMSE (Root Mean Squared Error), and R² (coefficient of determination).
+    """)
+    
+    with st.spinner('Testing models... Please wait'):
         try:
             models = {}
             results = []
             
             # Ridge Regression
-            with st.spinner('Training Ridge Regression...'):
+            with st.spinner('Testing Ridge Regression...'):
                 ridge = Pipeline([
                     ('scaler', StandardScaler()),
                     ('model', RidgeCV(alphas=np.logspace(-3, 3, 7), cv=5))
@@ -275,7 +340,7 @@ if run_train:
                 })
             
             # Random Forest
-            with st.spinner('Training Random Forest...'):
+            with st.spinner('Testing Random Forest...'):
                 rf = Pipeline([
                     ('scaler', StandardScaler()),
                     ('model', RandomForestRegressor(n_estimators=200, random_state=42, n_jobs=-1))
@@ -292,7 +357,7 @@ if run_train:
             
             # XGBoost (if available)
             if has_xgb:
-                with st.spinner('Training XGBoost...'):
+                with st.spinner('Testing XGBoost...'):
                     xgb = Pipeline([
                         ('scaler', StandardScaler()),
                         ('model', XGBRegressor(
@@ -311,11 +376,11 @@ if run_train:
                     })
             
             results_df = pd.DataFrame(results).sort_values('R²', ascending=False)
-            st.success("✅ Training completed successfully!")
+            st.success("✅ Testing completed successfully!")
             
         except Exception as e:
             import traceback
-            st.error(f"❌ Training failed: {e}")
+            st.error(f"❌ Testing failed: {e}")
             st.code(traceback.format_exc())
             st.stop()
 
@@ -325,6 +390,7 @@ if run_train:
 if models is not None and results_df is not None:
     
     st.subheader("📈 Model Performance Comparison")
+    st.markdown("*Lower MAE and RMSE values indicate better accuracy, while higher R² indicates better fit*")
     
     col1, col2 = st.columns([1, 2])
     
@@ -333,19 +399,30 @@ if models is not None and results_df is not None:
     
     with col2:
         fig, ax = plt.subplots(figsize=(10, 5))
-        results_df.plot(x='Model', y=['MAE', 'RMSE'], kind='bar', ax=ax)
-        ax.set_title("Model Error Comparison")
-        ax.set_ylabel("Error")
-        ax.legend(title="Metrics")
+        results_df.plot(x='Model', y=['MAE', 'RMSE'], kind='bar', ax=ax, color=['#FF6B6B', '#4ECDC4'])
+        ax.set_title("Model Error Comparison - Lower is Better", fontsize=14, fontweight='bold')
+        ax.set_ylabel("Error (Lakhs INR)", fontsize=12)
+        ax.set_xlabel("Machine Learning Model", fontsize=12)
+        ax.legend(title="Error Metrics", fontsize=10)
+        ax.grid(axis='y', alpha=0.3)
+        plt.xticks(rotation=0)
         st.pyplot(fig)
+        st.caption("📊 Comparison of prediction errors across models. MAE represents average absolute error, while RMSE penalizes larger errors more heavily.")
     
     # Model selection for explanations
     st.header("🔍 Model Interpretability")
+    st.markdown("""
+    Understanding *why* the model makes certain predictions is crucial for trust and accountability. 
+    We use **SHAP** (global explanations) and **LIME** (local explanations) to interpret model decisions.
+    """)
+    
     model_choice = st.selectbox('Select model for detailed analysis', options=list(models.keys()))
     selected_model = models[model_choice]
     
     # Predictions sample
     st.subheader("🎯 Sample Predictions")
+    st.markdown("*Comparing actual vs predicted prices on test data to assess model accuracy*")
+    
     n_samples = min(10, len(X_test))
     sample_preds = selected_model.predict(X_test.iloc[:n_samples])
     
@@ -356,13 +433,15 @@ if models is not None and results_df is not None:
     })
     pred_df['Error %'] = (pred_df['Error'] / pred_df['Actual Price'] * 100).round(2)
     st.dataframe(pred_df.style.background_gradient(cmap='RdYlGn', subset=['Error %']))
-    
-
-
-
+    st.caption("🎯 Green indicates underestimation, red indicates overestimation. Percentage error shows relative accuracy.")
 
     # SHAP Explanations
     st.subheader("🌟 SHAP Feature Importance")
+    st.markdown("""
+    **SHAP (SHapley Additive exPlanations)** values show how much each feature contributes to predictions. 
+    Positive SHAP values increase the prediction, while negative values decrease it. 
+    This provides a unified measure of global feature importance across the entire dataset.
+    """)
 
     with st.expander("Show SHAP Analysis", expanded=True):
         try:
@@ -382,8 +461,10 @@ if models is not None and results_df is not None:
                 fig, ax = plt.subplots(figsize=(10, 6))
                 shap.summary_plot(shap_values, X_test_scaled, 
                                 feature_names=X_test.columns.tolist(), show=False)
+                plt.title("SHAP Summary Plot - Feature Impact on Price Predictions", fontsize=14, fontweight='bold', pad=20)
                 st.pyplot(fig)
                 plt.close()
+                st.caption("🎨 Each dot represents a property. Color indicates feature value (red=high, blue=low). Position shows impact on prediction.")
                 
                 # Feature importance bar plot
                 st.write("**Top Features by Importance**")
@@ -392,8 +473,10 @@ if models is not None and results_df is not None:
                                 plot_type="bar", 
                                 feature_names=X_test.columns.tolist(), 
                                 show=False)
+                plt.title("Mean Absolute SHAP Values - Overall Feature Importance", fontsize=14, fontweight='bold', pad=20)
                 st.pyplot(fig2)
                 plt.close()
+                st.caption("📊 Bar length represents average impact magnitude. Longer bars indicate more influential features.")
                 
             else:  # Ridge or other linear models
                 st.info("Using Linear SHAP for Ridge regression...")
@@ -422,8 +505,10 @@ if models is not None and results_df is not None:
                         shap.summary_plot(shap_values, X_test_scaled, 
                                         feature_names=X_test.columns.tolist(), 
                                         show=False)
+                        plt.title("SHAP Summary Plot - Linear Model Feature Contributions", fontsize=14, fontweight='bold', pad=20)
                         st.pyplot(fig)
                         plt.close()
+                        st.caption("📈 Linear model SHAP values show consistent directional impact of each feature.")
                     else:
                         raise AttributeError("Model doesn't have coefficients")
                         
@@ -440,23 +525,14 @@ if models is not None and results_df is not None:
                     
                     fig, ax = plt.subplots(figsize=(10, 6))
                     feature_importance.plot(x='Feature', y='Coefficient', 
-                                        kind='barh', ax=ax, legend=False)
-                    ax.set_xlabel('Ridge Coefficient')
-                    ax.set_title('Feature Importance (Ridge Coefficients)')
+                                        kind='barh', ax=ax, legend=False, color='steelblue')
+                    ax.set_xlabel('Ridge Coefficient Value', fontsize=12)
+                    ax.set_title('Feature Importance - Ridge Model Coefficients', fontsize=14, fontweight='bold')
                     ax.axvline(x=0, color='black', linestyle='--', linewidth=0.8)
+                    ax.grid(axis='x', alpha=0.3)
                     st.pyplot(fig)
                     plt.close()
-                
-                # Feature importance bar plot
-                if 'RandomForest' in model_choice or 'XGBoost' in model_choice:
-                    st.write("**Top Features by Importance**")
-                    fig2, ax2 = plt.subplots(figsize=(10, 6))
-                    shap.summary_plot(shap_values, X_test_scaled, 
-                                    plot_type="bar", 
-                                    feature_names=X_test.columns.tolist(), 
-                                    show=False)
-                    st.pyplot(fig2)
-                    plt.close()
+                    st.caption("📊 Positive coefficients increase price, negative decrease it. Magnitude shows strength of effect.")
                 
         except Exception as e:
             import traceback
@@ -467,11 +543,19 @@ if models is not None and results_df is not None:
     
     # LIME Local Explanations
     st.subheader("🧪 LIME - Local Explanations")
+    st.markdown("""
+    **LIME (Local Interpretable Model-agnostic Explanations)** explains individual predictions by fitting 
+    a simple interpretable model around a specific instance. This shows which features most influenced 
+    a particular price prediction, helping stakeholders understand individual cases.
+    """)
     
     if has_lime:
         with st.expander("Explain Individual Predictions"):
-            instance_idx = st.slider('Select test instance to explain', 
-                                    0, len(X_test)-1, 0)
+            st.markdown("*Analyzing a random test instance to understand factors driving its price prediction*")
+            
+            # Automatically select a random instance instead of slider
+            instance_idx = np.random.randint(0, len(X_test))
+            st.info(f"Explaining randomly selected test instance #{instance_idx}")
             
             try:
                 explainer = LimeTabularExplainer(
@@ -488,12 +572,23 @@ if models is not None and results_df is not None:
                 )
                 
                 # Display explanation
-                st.write(f"**Explaining prediction for instance {instance_idx}**")
-                st.write(f"Actual Price: {y_test.iloc[instance_idx]:.2f} Lakhs")
-                st.write(f"Predicted Price: {selected_model.predict(X_test.iloc[[instance_idx]])[0]:.2f} Lakhs")
+                st.write(f"**Prediction Explanation for Instance {instance_idx}**")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Actual Price", f"₹{y_test.iloc[instance_idx]:.2f} Lakhs")
+                with col2:
+                    predicted = selected_model.predict(X_test.iloc[[instance_idx]])[0]
+                    st.metric("Predicted Price", f"₹{predicted:.2f} Lakhs")
                 
                 fig = exp.as_pyplot_figure()
+                fig.set_size_inches(10, 6)
+                plt.title(f"LIME Explanation - Feature Contributions for Instance {instance_idx}", 
+                         fontsize=14, fontweight='bold', pad=20)
                 st.pyplot(fig)
+                st.caption("🔍 Orange bars push prediction higher, blue bars lower. Length shows contribution magnitude.")
+                
+                if st.button("🔄 Explain Another Random Instance"):
+                    st.rerun()
                 
             except Exception as e:
                 st.error(f"LIME explanation failed: {e}")
@@ -502,6 +597,11 @@ if models is not None and results_df is not None:
     
     # Fairness Audit
     st.header("⚖️ Fairness Audit")
+    st.markdown("""
+    **Fairness analysis** ensures the model performs equitably across different demographic groups. 
+    We examine prediction accuracy across applicant categories (General, SC, ST, etc.) to detect 
+    potential bias. Significant disparities may indicate the need for model adjustment or additional fairness constraints.
+    """)
     
     if has_fairlearn and 'category' in X_test.columns:
         with st.expander("Fairness Analysis by Applicant Category", expanded=True):
@@ -520,39 +620,52 @@ if models is not None and results_df is not None:
                     sensitive_features=sensitive_feature
                 )
                 
-                st.write("**Overall Metrics:**")
+                st.write("**Overall Model Performance:**")
                 col1, col2 = st.columns(2)
-                col1.metric("Mean Absolute Error", f"{mean_absolute_error(y_test, predictions):.2f}")
+                col1.metric("Mean Absolute Error", f"{mean_absolute_error(y_test, predictions):.2f} Lakhs")
                 col2.metric("R² Score", f"{r2_score(y_test, predictions):.3f}")
                 
-                st.write("**Group-wise Performance:**")
+                st.write("**Group-wise Performance Breakdown:**")
+                st.markdown("*Performance metrics segmented by applicant category to identify disparities*")
                 st.dataframe(mf.by_group.style.background_gradient(cmap='RdYlGn'))
                 
                 # Visualize disparities
                 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-                mf.by_group['MAE'].plot(kind='bar', ax=ax1, color='coral')
-                ax1.set_title('MAE by Group')
-                ax1.set_ylabel('Mean Absolute Error')
+                mf.by_group['MAE'].plot(kind='bar', ax=ax1, color='coral', edgecolor='black')
+                ax1.set_title('Mean Absolute Error by Applicant Category', fontsize=12, fontweight='bold')
+                ax1.set_ylabel('Mean Absolute Error (Lakhs INR)', fontsize=11)
+                ax1.set_xlabel('Applicant Category', fontsize=11)
+                ax1.tick_params(axis='x', rotation=45)
+                ax1.grid(axis='y', alpha=0.3)
                 
-                mf.by_group['R²'].plot(kind='bar', ax=ax2, color='skyblue')
-                ax2.set_title('R² by Group')
-                ax2.set_ylabel('R² Score')
+                mf.by_group['R²'].plot(kind='bar', ax=ax2, color='skyblue', edgecolor='black')
+                ax2.set_title('R² Score by Applicant Category', fontsize=12, fontweight='bold')
+                ax2.set_ylabel('R² Score (Higher is Better)', fontsize=11)
+                ax2.set_xlabel('Applicant Category', fontsize=11)
+                ax2.tick_params(axis='x', rotation=45)
+                ax2.grid(axis='y', alpha=0.3)
                 
+                plt.tight_layout()
                 st.pyplot(fig)
+                st.caption("📊 Fairness metrics across demographic groups. Consistent bars indicate equitable performance; large variations suggest potential bias.")
                 
                 # Disparity metrics
                 st.write("**Disparity Analysis:**")
+                st.markdown("*Measuring performance variation across groups - lower values indicate more equitable predictions*")
+                
                 mae_diff = mf.difference()['MAE']
                 r2_diff = mf.difference()['R²']
                 
                 col1, col2 = st.columns(2)
-                col1.metric("MAE Difference (max-min)", f"{mae_diff:.3f}")
-                col2.metric("R² Difference (max-min)", f"{r2_diff:.3f}")
+                col1.metric("MAE Difference (max-min)", f"{mae_diff:.3f} Lakhs", 
+                           help="Maximum difference in MAE between any two groups")
+                col2.metric("R² Difference (max-min)", f"{r2_diff:.3f}",
+                           help="Maximum difference in R² between any two groups")
                 
                 if mae_diff > 5:
-                    st.warning("⚠️ Significant MAE disparity detected across groups!")
+                    st.warning("⚠️ Significant MAE disparity detected across groups! Consider bias mitigation techniques.")
                 else:
-                    st.success("✅ MAE disparity is within acceptable range")
+                    st.success("✅ MAE disparity is within acceptable range - model shows fair performance across groups")
                 
             except Exception as e:
                 st.error(f"Fairness audit failed: {e}")
@@ -561,6 +674,10 @@ if models is not None and results_df is not None:
     
     # Model Deployment
     st.header("💾 Model Deployment")
+    st.markdown("""
+    Deploy your trained model to production using the tools below. Download the model file for local use, 
+    or generate API code for cloud deployment with FastAPI and Docker.
+    """)
     
     col1, col2 = st.columns(2)
     
@@ -695,4 +812,7 @@ This dashboard implements:
 - Ready-to-deploy API code
 
 **Tech Stack:** Scikit-learn, XGBoost, SHAP, LIME, Fairlearn
+
+---
+**Accessibility:** All visualizations include descriptive text and captions for screen readers and assistive technologies.
 """)
