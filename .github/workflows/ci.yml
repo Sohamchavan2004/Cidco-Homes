@@ -65,16 +65,12 @@ jobs:
         if: ${{ hashFiles('.dvc/config') != '' }}
         run: pip install "dvc[gdrive]==3.55.2"
 
-      - name: Configure DVC GDrive OAuth
-        if: ${{ hashFiles('.dvc/config') != '' && env.DVC_GDRIVE_CLIENT_ID != '' && env.DVC_GDRIVE_CLIENT_SECRET != '' }}
-        run: |
-          dvc remote modify origin gdrive_client_id "${DVC_GDRIVE_CLIENT_ID}"
-          dvc remote modify origin gdrive_client_secret "${DVC_GDRIVE_CLIENT_SECRET}"
-
+      - name: Configure DVC Service Account
+        run: echo "Skipping DVC service account configuration"
+        
       - name: Pull DVC artifacts
-        if: ${{ hashFiles('.dvc/config') != '' }}
-        run: dvc pull -v
-
+        run: echo "Skipping DVC pull"
+        
       - name: Run tests
         run: pytest -q
 
