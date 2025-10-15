@@ -48,21 +48,13 @@ st.title("🏘️ CIDCO Housing Price Prediction Dashboard")
 st.markdown("""
 ### 📋 Problem Statement
 
-The City and Industrial Development Corporation (CIDCO) requires an intelligent system to predict housing prices 
-across various properties in the Navi Mumbai region. The objective is to develop a machine learning solution that:
+The City and Industrial Development Corporation (CIDCO) aims to develop an intelligent system to predict housing prices for properties across the Navi Mumbai region. The main objective is to build a machine learning solution that can accurately estimate property prices based on key features such as location, carpet area, distance from railway stations, and property categorization.  
 
-- **Predicts accurate property prices** based on features like location, carpet area, distance from railway stations, 
-  and property categorization
-- **Provides transparency** through interpretable AI techniques (SHAP and LIME) to explain price predictions
-- **Ensures fairness** across different applicant categories (General, SC, ST, Religious Minorities, etc.) and locations
-- **Assists decision-makers** in pricing strategies and policy formulation for affordable housing schemes
+In addition to accurate predictions, the system should provide transparency by using interpretable AI techniques like SHAP and LIME to explain individual price predictions. It should also ensure fairness across different applicant categories, including General, SC, ST, and Religious Minorities, as well as across various locations. By doing so, the system can assist decision-makers in setting pricing strategies and formulating policies for affordable housing schemes.  
 
-This dashboard analyzes CIDCO housing data using state-of-the-art machine learning models with a focus on:
-- **Predictive Accuracy**: Multiple regression models (Ridge, Random Forest, XGBoost) for robust predictions
-- **Explainability**: SHAP values for global feature importance and LIME for local instance-level explanations
-- **Responsible AI**: Fairness audits to detect and mitigate bias across sensitive demographic attributes
-- **Deployment Ready**: API code generation for production integration
+This dashboard presents an analysis of CIDCO housing data using state-of-the-art machine learning models. It focuses on multiple aspects: predictive accuracy through models such as Ridge Regression, Random Forest, and XGBoost; explainability using SHAP for global feature importance and LIME for local, instance-level explanations; fairness audits to detect and mitigate potential biases across sensitive demographic attributes; and readiness for deployment with API code generation for production integration.
 """)
+
 
 st.markdown("---")
 
